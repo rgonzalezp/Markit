@@ -30,11 +30,24 @@ If you did everything correctly, you should be able to see this tool kit (using 
 
 #### Usage
 
-The addon contains 3 modules with x functionalities:
+The addon contains 3 modules with 7 functionalities:
 
-1. 
-2. 
-3.
+##### Modification module
+![Image showing the modification module with 3 buttons: Decimate, export to stl and add tracker scaffold](demo/modification.png)
+
+In this module you have access to 3 functionalities:
+- Adding the tracker scaffold. This tracker scaffold needs to be added to every model in blender so we can map the model with talkit++ and make the model detectable.
+- Exporting to an stl file. STL is the standar format used for 3D printing
+- Decimate model. This function allows us to simplify the model being used, making it lightweight and easy to use. (Note: Don't use this function after adding the tracker scaffold!)
+
+##### Labeling module
+![Image showing the labeling module with 2 buttons and 3 textbox: Add label name, Add label description, Add label color, confirm (add label), delete selected areas](demo/labeling.png)
+
+In this module you have access to 2 functionalities:
+- You can select any number of faces on the model and add a label by inputing a name, a description and selecting a color and then clicking on the confirm button. A label will be created and automatically linked to the selected faces.
+- You can select any number of faces on the model and click on the delete selected area button. You only need to select 1 face of the corresponding area to delete that label. E.G: You select 3 faces of your object and label them, then you want to delete this action. You select only 1 of the previously labeled faces and click on the delete button. Finally all the 3 faces should lose their color, indicating that the label was deleted.
+
+##### Export and import module
 
 #### Implementation
 
