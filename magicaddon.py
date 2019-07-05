@@ -473,10 +473,11 @@ class MAGIC_hotarea(bpy.types.Operator):
         ob = bpy.context.active_object
         me = ob.data
         selfaces =[]
-        #check for edit mode
-        editmode = False
         delmaterials =[]
         delareas =[]
+        #check for edit mode
+        editmode = False
+        
         if ob.mode == 'EDIT':
             editmode =True
             #the following sets mode to object by default
@@ -488,35 +489,31 @@ class MAGIC_hotarea(bpy.types.Operator):
             # hashSet for material_index
             
         for f in selfaces:
-            
             i = 0
             for a in ob.area_list:
                 if f.material_index == a.area_index:
-                    if f.material_index != 0 :
-                        if f.material_index not in delmaterials:
-                            delmaterials.append(f.material_index)
-                            delareas.append(i)
-                            
-                            delareas.sort()
-                            i = i + 1
-                        else:
-                            i = i + 1
+                    if f.material_index not in delmaterials:
+                        delmaterials.append(f.material_index)
+                        delareas.append(i)
+                        delareas.sort()
+                        i = i + 1
                     else:
                         i = i + 1
-                else :
+                else:
                     i = i + 1
-                print(i)
                 
         for f in me.polygons:
             if f.material_index in delmaterials:
                 print("changing face", f.index)
                 f.material_index = 0
-                
-        delareas = delareas.reverse()
         
-        for j in delareas :
-            print(delareas[j])
-            ob.area_list.remove(delareas[j])
+        delareas.reverse()
+    
+        q = 0       
+        for j in delareas:
+            print(delareas[q])
+            ob.area_list.remove(delareas[q])
+            q = q + 1
         
                
         #done editing, restore edit mode if needed
@@ -680,7 +677,7 @@ class MAGIC_export(bpy.types.Operator):
 
 
 #
-#	Registration
+#   Registration
 #   All panels and operators must be registered with Blender; otherwise
 #   they do not show up. The simplest way to register everything in the
 #   file is with a call to bpy.utils.register_module(__name__).
