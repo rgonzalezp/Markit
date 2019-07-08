@@ -4,6 +4,7 @@ import bmesh
 import pickle
 import math
 import mathutils
+import json
 
 ###############################################################################################
 ####    We define the addon information in this structure:            #########################
@@ -562,7 +563,6 @@ class MAGIC_hotarea(bpy.types.Operator):
         ### We create a material with the color the user selected
         ### to add the new label
         material = makeMaterial(name=label, diffuse=color[:3], alpha=color[3])
-
         # create a mesh for the body
         if len(mesh.materials) <= 0:
             mesh.materials.append(makeMaterial(name="mainbody", diffuse=[1, 1, 1], alpha=1.0))
@@ -611,67 +611,140 @@ class MAGIC_export(bpy.types.Operator):
     bl_label = "export"
 
     def execute(self, context):
-        file = open(context.scene.export_path + context.scene.inputName_model, "wb")
-        print(context.scene.export_path)
+        fileName = context.scene.export_path + context.scene.inputName_model
+        ##print(context.scene.export_path)
         # print(bpy.ops.magic.hotarea().hotareaInfoStorage)
-        Temp = []
-        selection = bpy.context.selected_objects
-        obj = selection[0]
+        ##Temp = []
+        ##mesh = obj.data
+        ##mesh_editmode = bmesh.from_edit_mesh(mesh)
+        
+        data = {}
+        obj = bpy.context.active_object  # particular object by name
         mesh = obj.data
-        mesh_editmode = bmesh.from_edit_mesh(mesh)
+
+        ## Obtaining vertices data
+        i = 0
+        Vertices = {}
+
+        for vert in mesh.vertices:
+            Vertices[i] = [vert.co.x,vert.co.y,vert.co.z]
+            i+=1
+   
+        ## Obtaining faces data
+        ## remember to leave edit mode so 
+        ## changes reflect on the data <-- very important
+        j=0
+        Faces = {}
+
+        for face in mesh.polygons:
+            currentFace = []
+            Faces[j] = {}
+            for vert in face.vertices:
+                currentFace.append(vert)
+            Faces[j].update({'vertices':currentFace})
+            j+=1
+
+        j=0
+        for face in mesh.polygons:
+            Faces[j].update({'area_index':face.material_index})
+            j+=1
+        ## Areas information, dictionary with the 
+        ## 5 values that compose an area data structure
+        j=0
+        Areas = {}
+        for a in obj.area_list:
+            Areas[j] = {}
+            Areas[j].update({'area_index': a.area_index})
+            Areas[j].update({'area_label': a.area_label})
+            Areas[j].update({'area_gesture': a.area_gesture})
+            Areas[j].update({'area_content':a.area_content})
+            color = [0,0,0,0]
+            color[0] = a.area_color[0]
+            color[1] = a.area_color[1]
+            color[2] = a.area_color[2]
+            color[3] = a.area_color[3]
+    
+            Areas[j].update({'area_color':color})
+            j+=1
+
+        ## Storing all the materials to avoid problems for now
+        j=0
+        Materials = {}
+        for mat in mesh.materials:
+            Materials[j] = {}
+            Materials[j].update({'name':mat.name})
+            Materials[j].update({'diffuse':mat.diffuse_intensity})
+            color = [0,0,0]
+            color[0] = mat.diffuse_color[0]
+            color[1] = mat.diffuse_color[1]
+            color[2] = mat.diffuse_color[2]
+            Materials[j].update({'color':color})
+            j+=1
+    
+
+        ## Storing data
+        data['vertices'] = Vertices
+        data['faces'] = Faces
+        data['materials'] = Materials
+        data['areas'] = Areas
+        
+        with open(fileName + '.json' , 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        
 
         ### Find the verts for xyz surfaces to store in the pickle file
-        xz = []
-        yz = []
-        for polygon in mesh.polygons:
-            mat = obj.material_slots[polygon.material_index].material.name
-            if mat is not None:
-                if mat == "xzFace":
-                    verts_in_xzFace = polygon.vertices[:]
-                    for vert in verts_in_xzFace:
-                        xz.append(list(obj.data.vertices[vert].co))
-                if mat == "yzFace":
-                    verts_in_yzFace = polygon.vertices[:]
-                    for vert in verts_in_yzFace:
-                        yz.append(list(obj.data.vertices[vert].co))
-        Temp.append((xz, yz))
+        ##xz = []
+        ##yz = []
+        ##for polygon in mesh.polygons:
+        ##    mat = obj.material_slots[polygon.material_index].material.name
+        ##    if mat is not None:
+        ##        if mat == "xzFace":
+        ##            verts_in_xzFace = polygon.vertices[:]
+        ##            for vert in verts_in_xzFace:
+        ##                xz.append(list(obj.data.vertices[vert].co))
+        ##        if mat == "yzFace":
+        ##            verts_in_yzFace = polygon.vertices[:]
+        ##            for vert in verts_in_yzFace:
+        ##                yz.append(list(obj.data.vertices[vert].co))
+        ##Temp.append((xz, yz))
 
         ### Find the labelled area to store in pickle file
-        marked = []
+        ##marked = []
 
-        for eacharea in obj.area_list:
-            modifiedHistory = [eacharea.area_index, eacharea.area_label, eacharea.area_content, eacharea.area_gesture,
-                               eacharea.area_color[:], ]
-            face = mesh_editmode.faces[eacharea.area_index]
-            faceVerts = []
-            faceNormal = list(face.normal)
-            for vert in face.verts:
-                faceVerts.append(list(vert.co))
-            faceColor = obj.material_slots[face.material_index].material.diffuse_color
-            if faceColor[:] == modifiedHistory[4][:3]:
-                marked.append([modifiedHistory, list(faceColor), faceVerts, faceNormal])
+        ##for eacharea in obj.area_list:
+        ##    modifiedHistory = [eacharea.area_index, eacharea.area_label, eacharea.area_content, eacharea.area_gesture,
+        ##                       eacharea.area_color[:], ]
+        ##    face = mesh_editmode.faces[eacharea.area_index]
+        ##    faceVerts = []
+        ##    faceNormal = list(face.normal)
+        ##    for vert in face.verts:
+        ##        faceVerts.append(list(vert.co))
+        ##    faceColor = obj.material_slots[face.material_index].material.diffuse_color
+        ##    if faceColor[:] == modifiedHistory[4][:3]:
+        ##        marked.append([modifiedHistory, list(faceColor), faceVerts, faceNormal])
                 # print(faceColor[:] ==  modifiedHistory[4][:3])
         # pickle.dump(Temp,file)
-        Temp.append(marked)
+        ##Temp.append(marked)
 
         ### Find the unmarked faces to store in pickle file:
-        unmarked = []
-        for face in mesh_editmode.faces:
+        ##unmarked = []
+        ##for face in mesh_editmode.faces:
             # print(face.material_index)
-            if face.material_index == 0:
-                faceVerts = []
-                faceNormal = list(face.normal)
-                for vert in face.verts:
-                    faceVerts.append(list(vert.co))
-                unmarked.append([faceVerts, faceNormal])
-        print(len(unmarked))
-        Temp.append(unmarked)
+        ##    if face.material_index == 0:
+        ##        faceVerts = []
+        ##        faceNormal = list(face.normal)
+        ##        for vert in face.verts:
+        ##            faceVerts.append(list(vert.co))
+        ##        unmarked.append([faceVerts, faceNormal])
+        ##print(len(unmarked))
+        ##Temp.append(unmarked)
 
         ### Obtain the name and introduction of the model to export
         Name = context.scene.inputName_model
         Intro = context.scene.inputIntroduction_model
-        Temp.append([Name, Intro])
-        pickle.dump(Temp, file, protocol=2)
+        
+        ##Temp.append([Name, Intro])
+        ##pickle.dump(Temp, file, protocol=2)
 
         return {'FINISHED'}
 
