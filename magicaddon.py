@@ -5,6 +5,7 @@ import pickle
 import math
 import mathutils
 import json
+from collections import OrderedDict
 
 ###############################################################################################
 ####    We define the addon information in this structure:            #########################
@@ -366,7 +367,7 @@ class ToolsPanel(bpy.types.Panel):
         
         ### We define the last section, related to the model export
 
-        layout.label("EXPORT LABELS", icon="FILESEL")
+        layout.label("EXPORT AND IMPORT", icon="FILESEL")
         row = layout.row(align=True)
         box = row.box()
         
@@ -374,9 +375,11 @@ class ToolsPanel(bpy.types.Panel):
         box.prop(context.scene, "inputName_model")
         box.prop(context.scene, "inputIntroduction_model")
         box.prop(context.scene, "export_path")
+        box.prop(context.scene, "import_path")
         
         ### Buttons that call for the functionalities
-        box.operator("magic.export", text="confirm")
+        box.operator("magic.export", text="export")
+        box.operator("magic.import", text="import")
 
 ###############################################################################################
 ####    MAGIC_marker operator class                                     #######################
@@ -602,8 +605,8 @@ class MAGIC_hotarea(bpy.types.Operator):
 
 ###############################################################################################
 ####    MAGIC_export operator class                                    ########################
-####    In this class we define the functions used in the EXPORT LABELS#######################
-####    module: Export labels                                          #####################
+####    In this class we define the functions used to export the model ######################
+####    module: Export and import                                      #####################
 ###############################################################################################
 
 class MAGIC_export(bpy.types.Operator):
@@ -747,6 +750,128 @@ class MAGIC_export(bpy.types.Operator):
         ##pickle.dump(Temp, file, protocol=2)
 
         return {'FINISHED'}
+    
+###############################################################################################
+####    MAGIC_import operator class                                    ########################
+####    In this class we define the functions used to import the model #######################
+####    module: Export and import                                      #####################
+###############################################################################################
+
+class MAGIC_import(bpy.types.Operator):
+    bl_idname = "magic.import"
+    bl_label = "import"
+
+    def execute(self, context):
+        
+                ## SUPER SPECIAL NOTE ABOUT tracker scaffold, need to select the model after the scaffold, so materials store properly.
+        ## Import file - Done
+        with open(context.scene.import_path) as json_file:  
+            data = json.load(json_file, object_pairs_hook=OrderedDict)
+        
+        ## Add each vertex to a list - Done
+        Vertices = []
+        i=0
+        for p in data['vertices']:
+            p = data['vertices'][str(i)]
+            vector = mathutils.Vector((p))
+            Vertices.append(vector)
+            i+=1
+        
+        
+        ## Add each face to a list - Done
+        Faces = []
+        i=0
+        for f in data['faces']:
+            f = data['faces'][str(i)]['vertices']
+            Faces.append(f)
+            i+=1
+        
+        ## Use file name to add the new mesh
+        NewMesh = bpy.data.meshes.new("whatever")
+        
+        ### We define how the mesh will be built
+        
+        ## Use both lists to build the model
+        NewMesh.from_pydata \
+            (
+                Vertices,
+                [],
+                Faces
+            )
+        NewMesh.update()
+        
+        context = bpy.context
+        ## Use file name again to link it
+        NewObj = bpy.data.objects.new("whatever", NewMesh)
+        
+        ### linking the new object to the scene
+        context.scene.objects.link(NewObj)
+        
+        ### We select the object to add the materials to the face, and also the areas.
+        context.scene.objects.active = NewObj
+        
+        ob = bpy.context.object 
+                        
+        current_mode = bpy.context.object.mode
+        
+        ### Check in which mode we are to handle errors
+        if current_mode != 'EDIT' :
+            bpy.ops.object.editmode_toggle()
+        
+        ### Object data
+        mesh = ob.data
+        
+        ### Here we start adding the materials
+        
+        ##material = makeMaterial(name=p.name, diffuse=p.color, alpha=p.diffuse)
+        ##mesh.materials.append(material)
+        i=0
+        for p in data['materials']:
+            ## Change all of this to makeMaterial when doing in main component
+            currentData = data['materials'][str(i)]
+            material = makeMaterial(name=currentData['name'], diffuse=currentData['color'], alpha=currentData['diffuse'])
+            mesh.materials.append(material)
+            i+=1
+            
+        ### Here we start adding the areas
+        i=0
+        for p in data['areas']:
+            currentData = data['areas'][str(i)]
+            ob.area_list.add()
+            ob.area_list[-1].area_index = currentData['area_index']
+            ob.area_list[-1].area_label = currentData['area_label']
+            ob.area_list[-1].area_content = currentData['area_content']
+            ob.area_list[-1].area_gesture = currentData['area_gesture']
+            ob.area_list[-1].area_color = currentData['area_color']
+            i+=1
+        
+        ### Here we paint all the faces depending on their index    
+        mesh = ob.data
+        
+        if bpy.context.object.mode != 'EDIT' :
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.remove_doubles(threshold=0.0001)
+            
+        bm = bmesh.from_edit_mesh(mesh)
+        if hasattr(bm.faces, "ensure_lookup_table"): 
+            bm.faces.ensure_lookup_table()
+        
+        ### We add the materials xzFace and yzFace to 2 specific faces in
+        ### the scaffold to have a point of reference.
+        i=0
+        for f in data['faces']:
+            area_index = data['faces'][str(i)]['area_index']
+            bm.faces[i].material_index = area_index
+            i+=1
+            
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.normals_make_consistent(inside=False)
+        
+            
+            
+        bpy.ops.object.editmode_toggle()   
+
+        return {'FINISHED'}
 
 
 #
@@ -808,10 +933,17 @@ def register():
 
     bpy.types.Scene.export_path = bpy.props.StringProperty \
             (
-            name="Data Address",
+            name="Output Directory",
             default="",
-            description="Define the folder address of the destination",
+            description="Define the folder address to output the model",
             subtype='DIR_PATH'
+        )
+    bpy.types.Scene.import_path = bpy.props.StringProperty \
+            (
+            name="Import File",
+            default="",
+            description="Define the file address to import the model",
+            subtype='FILE_PATH'
         )
 
     bpy.types.Scene.export_model = bpy.props.StringProperty \
@@ -842,6 +974,7 @@ def unregister():
     del bpy.types.Scene.inputColor_hotarea
     del bpy.types.Scene.inputGesture_hotarea
     del bpy.types.Scene.export_path
+    del bpy.types.Scene.import_path
     del bpy.types.Object.area_list
 
 
