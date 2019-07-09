@@ -54,6 +54,22 @@ In this module you have access to 2 functionalities:
 - You can import a model providing a json file with the format explained above. You only need to provide the file path in your computer and click the import button.
 
 ## Implementation
+### JSON data structure
+There are 2 important sections in our json file.
+#### XZ and YZ planes
+![Image showing json structure of the xz and yz planes. Each is composed with 3 vertices](demo/xzyz.png)
+
+We use these XZ and YZ planes (Composed of 3 vertices each one of them) so that talkit++ can use this constant point of reference to map the model and assign the audio labels in realtime.
+
+TODO: Elaborate more in the explanation and show more images.
+#### Vertices, faces, areas and materials.
+![Image showing json structure of the vertices, faces, areas and materials. Vertices are composed with 3 vectors, faces are composed with 3 vertices and the area index the belong to, areas contain each label made by the user](demo/rebuildmodel.png)
+
+To rebuild the model we need 4 pieces of information. 
+- Vertices, which represent each point in the model. 
+- Faces, which are composed with 3 or more vertices and make carcass of the model. 
+- Materials, which help us with the labeling of the model (Gives color too). 
+- Areas, which contain the information about the label
 
 ## Contact
 
