@@ -1,6 +1,23 @@
 # MAGIC_I3M
 MAGIC_I3M is a blender add-on in which users can label 3d models to make them interactable with Talkit ++, an application that plays audio and visual content as a user touches parts of a 3D print. For more information, check out: [Talkit++](https://github.com/saltfishzzh/Talkit)
 
+Table of Contents
+=================
+* [Dependencies](#dependencies)
+    * [Getting started](#getting-started)
+    * [Addon installation](#addon-installation)
+    * [Tutorial on how to use the tool](#tutorial-on-how-to-use-the-tool)
+* [Modules](#modules)
+    * [Modification module](#modification-module)
+    * [Labeling module](#labeling-module)
+    * [Export and import module](#export-and-import-module)
+* [Implementation](#implementation)
+    * [JSON data structure](#json-data-structure)
+         * [XZ and YZ planes](#xz-and-yz-planes)
+         * [Vertices, faces, areas and materials.](#vertices-faces-areas-and-materials)
+* [Contact](#contact)
+* [Credits](#credits)
+
 ## Dependencies
 
 You should be using these tools:
@@ -8,7 +25,7 @@ You should be using these tools:
 1. Blender 2.78
 
 ## Getting started
-To install the add-on you only need the vanilla version of Blender to start labelling models!
+To install the add-on you only need the vanilla version of Blender and then you can start labeling models!
 
 Link to blender latest version: https://www.blender.org/download/
 
@@ -28,9 +45,9 @@ If you did everything correctly, you should be able to see this tool kit (using 
 ![Image showing Magic_I3M interface](demo/magic.png)
 
 ### Tutorial on how to use the tool
-- In this google drive folder https://drive.google.com/drive/folders/1KE6KdNvfaFP7SPK8YQNnWqTsNPT6tJnB?usp=sharing you can access to a small tutorial on how to do create your first I3M. Follow the instructions in the google slides. Don't hesitate to contact the creators (At the bottom of this readme) if you have any questions.
+- In this google drive folder https://drive.google.com/drive/folders/1KE6KdNvfaFP7SPK8YQNnWqTsNPT6tJnB?usp=sharing you can access to a small tutorial to learn how to create your first I3M. Follow the instructions in the google slides. Don't hesitate to contact the creators (At the bottom of this readme) if you have any questions.
 
-## Usage
+## Modules
 
 The addon contains 3 modules with 7 functionalities:
 
@@ -69,7 +86,7 @@ TODO: Elaborate more in the explanation and show more images.
 
 To rebuild the model we need 4 pieces of information. 
 - Vertices, which represent each point in the model. 
-- Faces, which are composed with 3 or more vertices and make carcass of the model. 
+- Faces, which are composed with 3 or more vertices and make the carcass of the model. 
 - Materials, which help us with the labeling of the model (Gives color too). 
 - Areas, which contain the information about the label
 
