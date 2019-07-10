@@ -9,6 +9,7 @@ You should be using these tools:
 
 ## Getting started
 To install the add-on you only need the vanilla version of Blender to start labelling models!
+
 Link to blender latest version: https://www.blender.org/download/
 
 ### Addon installation
