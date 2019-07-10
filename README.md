@@ -7,10 +7,11 @@ You should be using these tools:
 
 1. Blender 2.78
 
-### Install
+## Getting started
 To install the add-on you only need the vanilla version of Blender to start labelling models!
+Link to blender latest version: https://www.blender.org/download/
 
-## Addon installation
+### Addon installation
 This section covers briefly how to install an add-on in Blender:
 
 - On the top left corner of your screen click the file tab and then go to your user preferences, 
@@ -25,8 +26,8 @@ This section covers briefly how to install an add-on in Blender:
 If you did everything correctly, you should be able to see this tool kit (using the default interface):
 ![Image showing Magic_I3M interface](demo/magic.png)
 
-### Getting Started
-- Explain how to use the tool and what does it work for.
+### Tutorial on how to use the tool
+- In this google drive folder https://drive.google.com/drive/folders/1KE6KdNvfaFP7SPK8YQNnWqTsNPT6tJnB?usp=sharing you can access to a small tutorial on how to do create your first I3M. Follow the instructions in the google slides. Don't hesitate to contact the creators (At the bottom of this readme) if you have any questions.
 
 ## Usage
 
