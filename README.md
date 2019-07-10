@@ -1,6 +1,23 @@
 # MAGIC_I3M
 MAGIC_I3M is a blender add-on in which users can label 3d models to make them interactable with Talkit ++, an application that plays audio and visual content as a user touches parts of a 3D print. For more information, check out: [Talkit++](https://github.com/saltfishzzh/Talkit)
 
+Table of Contents
+=================
+* [Dependencies](#dependencies)
+    * [Getting started](#getting-started)
+    * [Addon installation](#addon-installation)
+    * [Tutorial on how to use the tool](#tutorial-on-how-to-use-the-tool)
+* [Usage](#usage)
+    * [Modification module](#modification-module)
+    * [Labeling module](#labeling-module)
+    * [Export and import module](#export-and-import-module)
+* [Implementation](#implementation)
+    * [JSON data structure](#json-data-structure)
+         * [XZ and YZ planes](#xz-and-yz-planes)
+         * [Vertices, faces, areas and materials.](#vertices-faces-areas-and-materials)
+* [Contact](#contact)
+* [Credits](#credits)
+
 ## Dependencies
 
 You should be using these tools:
