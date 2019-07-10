@@ -25,7 +25,7 @@ You should be using these tools:
 1. Blender 2.78
 
 ## Getting started
-To install the add-on you only need the vanilla version of Blender to start labelling models!
+To install the add-on you only need the vanilla version of Blender and then you can start labeling models!
 
 Link to blender latest version: https://www.blender.org/download/
 
@@ -86,7 +86,7 @@ TODO: Elaborate more in the explanation and show more images.
 
 To rebuild the model we need 4 pieces of information. 
 - Vertices, which represent each point in the model. 
-- Faces, which are composed with 3 or more vertices and make carcass of the model. 
+- Faces, which are composed with 3 or more vertices and make the carcass of the model. 
 - Materials, which help us with the labeling of the model (Gives color too). 
 - Areas, which contain the information about the label
 
