@@ -7,7 +7,7 @@ Table of Contents
     * [Getting started](#getting-started)
     * [Addon installation](#addon-installation)
     * [Tutorial on how to use the tool](#tutorial-on-how-to-use-the-tool)
-* [Usage](#usage)
+* [Modules](#modules)
     * [Modification module](#modification-module)
     * [Labeling module](#labeling-module)
     * [Export and import module](#export-and-import-module)
@@ -45,9 +45,9 @@ If you did everything correctly, you should be able to see this tool kit (using 
 ![Image showing Magic_I3M interface](demo/magic.png)
 
 ### Tutorial on how to use the tool
-- In this google drive folder https://drive.google.com/drive/folders/1KE6KdNvfaFP7SPK8YQNnWqTsNPT6tJnB?usp=sharing you can access to a small tutorial on how to do create your first I3M. Follow the instructions in the google slides. Don't hesitate to contact the creators (At the bottom of this readme) if you have any questions.
+- In this google drive folder https://drive.google.com/drive/folders/1KE6KdNvfaFP7SPK8YQNnWqTsNPT6tJnB?usp=sharing you can access to a small tutorial to learn how to create your first I3M. Follow the instructions in the google slides. Don't hesitate to contact the creators (At the bottom of this readme) if you have any questions.
 
-## Usage
+## Modules
 
 The addon contains 3 modules with 7 functionalities:
 
