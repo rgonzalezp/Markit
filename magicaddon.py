@@ -466,24 +466,17 @@ class MAGIC_onlineimport(bpy.types.Operator):
                                   message='You select more than one object')
             return {'FINISHED'}
 
-        if self.operation == "onlineimport":
-            self.add(context)
-
-        return {'FINISHED'}
-    
-    
-    ### We define the clean function as removing all the areas of the object
-    
-    def onlineimport(self, context):
         ## we get the id of the model
         modelid = context.scene.model_id
         
         ## we make the request with the id
-        req = requests.get('https://github.com/timeline.json')
+        req = requests.get('https://0bd3c624-c0bd-4d03-9a1a-1b6e27c23183.mock.pstmn.io/fake.json')
+        
+        
         file = req.json()
         
         ## Copy pasted import method
-        data = json.load(file, object_pairs_hook=OrderedDict)
+        data = file
         
         ## Add each vertex to a list - Done
         Vertices = []
@@ -587,7 +580,6 @@ class MAGIC_onlineimport(bpy.types.Operator):
             
             
         bpy.ops.object.editmode_toggle()
-        return {'FINISHED'}
         
         
         
