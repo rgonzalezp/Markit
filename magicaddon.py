@@ -470,7 +470,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         modelid = context.scene.model_id
         
         ## we make the request with the id
-        req = requests.get('https://0bd3c624-c0bd-4d03-9a1a-1b6e27c23183.mock.pstmn.io/fake.json')
+        req = requests.get('http://3.16.42.99:8000/api/files/' + modelid +'.json')
         
         
         file = req.json()
@@ -1064,8 +1064,7 @@ def register():
             (
             name="Model ID",
             default="",
-            description="Type in the model you want to load",
-            subtype='BYTE_STRING'
+            description="Type in the model you want to load"
         )
 
     bpy.types.Scene.export_model = bpy.props.StringProperty \
