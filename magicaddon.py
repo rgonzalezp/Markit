@@ -470,7 +470,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         modelid = context.scene.model_id
         
         ## we make the request with the id
-        req = requests.get('http://13.59.169.104:8000/api/files/' + modelid + '.json')
+        req = requests.get('http://13.59.169.104:8000/api/models/' + modelid + '.json')
         
         
         file = req.json()
