@@ -295,8 +295,8 @@ def makeScaffold(self,context):
     ### We add the materials xzFace and yzFace to 2 specific faces in
     ### the scaffold to have a point of reference.
     
-    bm.faces[154].material_index = 1
-    bm.faces[155].material_index = 2
+    bm.faces[155].material_index = 1
+    bm.faces[154].material_index = 2
         
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.normals_make_consistent(inside=False)
@@ -470,7 +470,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         modelid = context.scene.model_id
         
         ## we make the request with the id
-        req = requests.get('http://13.59.169.104:8000/api/models/' + modelid + '.json')
+        req = requests.get('http://13.59.169.104:8000/api/files/' + modelid + '.json')
         
         
         file = req.json()
@@ -790,10 +790,16 @@ class MAGIC_export(bpy.types.Operator):
 
         for face in mesh.polygons:
             currentFace = []
+            currentNormal = []
             Faces[j] = {}
+            
+            for val in face.normal:
+                currentNormal.append(val)
             for vert in face.vertices:
                 currentFace.append(vert)
+                
             Faces[j].update({'vertices':currentFace})
+            Faces[j].update({'normal':currentNormal})
             j+=1
 
         j=0
