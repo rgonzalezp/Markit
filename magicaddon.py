@@ -295,8 +295,8 @@ def makeScaffold(self,context):
     ### We add the materials xzFace and yzFace to 2 specific faces in
     ### the scaffold to have a point of reference.
     
-    bm.faces[155].material_index = 1
-    bm.faces[154].material_index = 2
+    bm.faces[155].material_index = 2
+    bm.faces[154].material_index = 1
         
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.normals_make_consistent(inside=False)
@@ -804,7 +804,10 @@ class MAGIC_export(bpy.types.Operator):
 
         j=0
         for face in mesh.polygons:
-            Faces[j].update({'area_index':face.material_index})
+            if obj.material_slots[face.material_index].name.startswith('mainBody') or obj.material_slots[face.material_index].name.startswith('yzFace') or obj.material_slots[face.material_index].name.startswith('xzFace')  :
+                Faces[j].update({'area_index':0})
+            else :
+                Faces[j].update({'area_index':face.material_index})
             j+=1
         ## Areas information, dictionary with the 
         ## 5 values that compose an area data structure
@@ -849,11 +852,11 @@ class MAGIC_export(bpy.types.Operator):
         for polygon in mesh.polygons:
             mat = obj.material_slots[polygon.material_index].material.name
             if mat is not None:
-                if mat == "xzFace":
+                if mat.startswith("xzFace"):
                     verts_in_xzFace = polygon.vertices[:]
                     for vert in verts_in_xzFace:
                         xz.append(list(obj.data.vertices[vert].co))
-                if mat == "yzFace":
+                if mat.startswith("yzFace"):
                     verts_in_yzFace = polygon.vertices[:]
                     for vert in verts_in_yzFace:
                         yz.append(list(obj.data.vertices[vert].co))
