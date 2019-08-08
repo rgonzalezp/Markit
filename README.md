@@ -1,5 +1,5 @@
-# MAGIC_I3M
-MAGIC_I3M is a blender add-on in which users can label 3d models to make them interactable with Talkit ++, an application that plays audio and visual content as a user touches parts of a 3D print. For more information, check out: [Talkit++](https://github.com/saltfishzzh/Talkit)
+# Markit
+Markit is a blender add-on in which users can label 3d models to make them interactable with Talkit ++, an application that plays audio and visual content as a user touches parts of a 3D print. For more information, check out: [Talkit++](https://github.com/saltfishzzh/Talkit)
 
 Table of Contents
 =================
@@ -29,7 +29,7 @@ To install the add-on you only need the vanilla version of Blender and then you 
 
 Link to blender latest version: https://www.blender.org/download/
 
-### Addon installation
+## Addon installation
 This section covers briefly how to install an add-on in Blender:
 
 - On the top left corner of your screen click the file tab and then go to your user preferences, 
