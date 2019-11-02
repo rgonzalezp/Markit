@@ -95,4 +95,6 @@ To rebuild the model we need 4 pieces of information.
 If you have any question about using the project, please contact Lei Shi (ls776@cornell.edu) or Ricardo Gonzalez (rgonzalezp1115@gmail.com). They would be happy to explain the project to you.	
 
 ## Credits
+Released under: [![DOI](https://zenodo.org/badge/195433622.svg)](https://zenodo.org/badge/latestdoi/195433622)
+
 This add-on was developed in Cornell Tech under professor Shiri Azenkot supervision.
