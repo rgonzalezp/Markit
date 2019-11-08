@@ -121,7 +121,47 @@ def makeMaterial(name, diffuse, alpha, specular=(1, 1, 1)):
     return mat
 
 
+def mergeObjects(self,context):
+    
+    obs = []
+    scenario = context.scene
+    for ob in scenario.objects:
+    # whatever objects you want to join...
+        if ob.type == 'MESH':
+            obs.append(ob)
+    ctx = bpy.context.copy()
 
+    # one of the objects to join
+    ctx['active_object'] = obs[1]
+
+    ctx['selected_objects'] = obs
+    
+    # we need the scene bases as well for joining
+    ctx['selected_editable_bases'] = [scenario.object_bases[ob.name] for ob in obs]
+
+    bpy.ops.object.join(ctx)
+    
+    ob = bpy.context.active_object
+    
+    label = context.scene.inputLabel_hotarea
+    color = context.scene.inputColor_hotarea[:]
+    content = context.scene.inputContent_hotarea
+    gesture = context.scene.inputGesture_hotarea
+    i=0
+    for i in range(4):
+        ob.area_list.add()
+        ob.area_list[-1].area_index = 0
+        ob.area_list[-1].area_label = "nothing"
+        ob.area_list[-1].area_content = "nothing"
+        ob.area_list[-1].area_gesture = "nothing"
+        ob.area_list[-1].area_color = [0,0,0,0]
+        i+=1
+    
+    print(ob.area_list)
+    
+    return {"FINISHED"}
+    
+    
 ###############################################################################################
 ####    Add Scaffold function                                           #######################
 ####    This function creates and adds the tracker scaffold to the scene#######################
@@ -295,8 +335,8 @@ def makeScaffold(self,context):
     ### We add the materials xzFace and yzFace to 2 specific faces in
     ### the scaffold to have a point of reference.
     
-    bm.faces[155].material_index = 2
-    bm.faces[154].material_index = 1
+    bm.faces[155].material_index = 1
+    bm.faces[154].material_index = 2
         
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.normals_make_consistent(inside=False)
@@ -338,6 +378,7 @@ class ToolsPanel(bpy.types.Panel):
         
         ### Buttons that call for the functionalities
         box.operator("magic.marker", text="Add tracker scaffold").operation = "add"
+        box.operator("magic.marker", text="Merge object with tracker scaffold").operation = "merge"
         box.operator("magic.marker", text="Export stl printable model").operation = "stl"
         box.operator("magic.marker", text="Decimate model (simplify)").operation = "decimate"
 
@@ -406,6 +447,9 @@ class MAGIC_marker(bpy.types.Operator):
     def execute(self, context):
         if self.operation == "add":
             makeScaffold(self,context)
+            
+        if self.operation == "merge":
+            mergeObjects(self,context)
             
 
         if self.operation == "stl":
@@ -807,6 +851,9 @@ class MAGIC_export(bpy.types.Operator):
             if obj.material_slots[face.material_index].name.startswith('mainBody') or obj.material_slots[face.material_index].name.startswith('yzFace') or obj.material_slots[face.material_index].name.startswith('xzFace')  :
                 Faces[j].update({'area_index':0})
             else :
+                print(face)
+           
+                print(face.material_index)
                 Faces[j].update({'area_index':face.material_index})
             j+=1
         ## Areas information, dictionary with the 
