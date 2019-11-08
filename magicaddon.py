@@ -335,8 +335,8 @@ def makeScaffold(self,context):
     ### We add the materials xzFace and yzFace to 2 specific faces in
     ### the scaffold to have a point of reference.
     
-    bm.faces[155].material_index = 1
-    bm.faces[154].material_index = 2
+    bm.faces[155].material_index = 2
+    bm.faces[154].material_index = 1
         
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.normals_make_consistent(inside=False)
@@ -709,7 +709,7 @@ class MAGIC_hotarea(bpy.types.Operator):
         q = 0       
         for j in delareas:
             print(delareas[q])
-            ob.area_list.remove(delareas[q])
+            ob.area_list[delareas[q]].area_index = 0
             q = q + 1
         
                
@@ -850,9 +850,7 @@ class MAGIC_export(bpy.types.Operator):
         for face in mesh.polygons:
             if obj.material_slots[face.material_index].name.startswith('mainBody') or obj.material_slots[face.material_index].name.startswith('yzFace') or obj.material_slots[face.material_index].name.startswith('xzFace')  :
                 Faces[j].update({'area_index':0})
-            else :
-                print(face)
-           
+            else :   
                 print(face.material_index)
                 Faces[j].update({'area_index':face.material_index})
             j+=1
