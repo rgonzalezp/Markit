@@ -148,7 +148,7 @@ def mergeObjects(self,context):
     content = context.scene.inputContent_hotarea
     gesture = context.scene.inputGesture_hotarea
     i=0
-    for i in range(4):
+    for i in range(3):
         ob.area_list.add()
         ob.area_list[-1].area_index = 0
         ob.area_list[-1].area_label = "nothing"
