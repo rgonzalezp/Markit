@@ -518,10 +518,13 @@ class MAGIC_onlineimport(bpy.types.Operator):
         
         
         file = req.json()
+    
+
         
         ## Copy pasted import method
-        data = file
+        data = json.loads(bytes(file["Body"]["data"]).decode())
         
+     
         ## Add each vertex to a list - Done
         Vertices = []
         i=0
