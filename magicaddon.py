@@ -7,6 +7,10 @@ import mathutils
 import json
 import requests
 from collections import OrderedDict
+from scipy.spatial import distance
+import threading
+import time
+import numpy as np
 
 ###############################################################################################
 ####    We define the addon information in this structure:            #########################
@@ -27,6 +31,211 @@ bl_info = \
         "tracker_url" : "",
         "category" : "Development",
 }
+
+def writefile(fileName,data):
+    with open(fileName + '.json' , 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    
+
+#get transformation matrix from the Blender coordinates to the Tracker coordinates
+def solve_affine( p1, p2, p3, p4, s1, s2, s3, s4 ):
+    x = np.transpose(np.matrix([p1,p2,p3,p4]))
+    y = np.transpose(np.matrix([s1,s2,s3,s4]))
+    x = np.vstack((x,[1,1,1,1]))
+    y = np.vstack((y,[1,1,1,1]))
+    mtx = y * x.I
+    # return function that takes input x and transforms it
+    # don't need to return the 4th row as it is
+    return mtx
+
+#enter a point X in Blender coordinates, and transformation matrix to get its Tracker coordinates
+def solve_point(x, trans):
+    result= (trans*np.vstack((np.matrix(x).reshape(3,1),1)))[0:3,:].tolist()
+    return [result[0][0],result[1][0],result[2][0]]
+
+#enter a normal X in Blender coordinates, and transformation matrix to get its Tracker coordinates
+def solve_normal(x, trans):
+    result= (trans*np.vstack((np.matrix(x).reshape(3,1),0)))[0:3,:].tolist()
+    return [result[0][0],result[1][0],result[2][0]]
+
+#for initialize the transformation matrix
+#calculate the euclidean distance between pt1 and pt2
+def calDistance(pt1,pt2):
+    return distance.euclidean(pt1,pt2)
+
+#for initialize the transformation matrix
+#scale a list with a value (scale)
+def calScaledList(scale,list):
+    return  [x * scale for x in list]
+
+def faceptsCompare(faceA,faceB):
+    for ptA in faceA:
+        for ptB in faceB:
+            if ptA == ptB:
+                return True
+
+    return False
+#blenderFace object
+#store information for a face
+class blenderFace:
+    def __init__(self, rawFace, mtx):
+        #for marked face, it has more information
+        #with the len == 4
+        if len(rawFace)==4:
+            #makred face
+            self.marked=True
+            self.blender_index = rawFace[0][0]
+            self.label = rawFace[0][1]
+            self.content = rawFace[0][2]
+            self.gesture = rawFace[0][3]
+            self.blender_color = [x * 255 for x in rawFace[1]]
+            self.normal = rawFace[3]
+            self.verts = rawFace[2]
+            self.vertsConverted = []
+            self.vertsConverted_2d = []
+            self.relatedFaces = []
+            for eachPt in self.verts:
+                self.vertsConverted.append(solve_point(eachPt, mtx))
+            self.normalConverted= solve_normal(self.normal, mtx)
+        else:
+            #unmarked face
+            self.marked = False
+            self.verts = rawFace[0]
+            self.normal = rawFace[1]
+            self.blender_index = rawFace[2]
+
+            self.label = "unmarked"
+            self.content = "null"
+            self.gesture = "null"
+            self.vertsConverted = []
+            self.vertsConverted_2d = []
+            self.relatedFaces = []
+            for eachPt in self.verts:
+                self.vertsConverted.append(solve_point(eachPt, mtx))
+            self.normalConverted = solve_normal(self.normal, mtx)
+
+#blenderPoint object
+#store information for a point
+class blenderPoint:
+    def __init__(self, coordinates, faceIndex, mtx):
+        self.vert = coordinates[:]
+        self.faceIndex = [faceIndex]
+        self.vertsConverted = solve_point(self.vert, mtx)
+
+    def addFace(self, faceIndex):
+        self.faceIndex.append(faceIndex)
+
+#read blender pickle file and save them as blenderFace or blenderPoint
+class blenderReader:
+    #initialize the reader with the pickle file address
+    def __init__(self,fileAddress):
+        import datetime
+        currentDT = datetime.datetime.now()
+        print ("load file" + str(currentDT))
+        file = open(fileAddress, "rb")
+        #blenderData is encoded as [(xy,yz),(marked face),(unmarked face), (name, introduction)]
+        self.data = pickle.load(file)
+
+        self.blenderData = self.data[0]
+        file.close()
+        print ("finish loading" + str(datetime.datetime.now()))
+        #variables for finding the transformation matrix
+        self.vertsXZ = self.blenderData[0][0][:]
+        self.vertsYZ = self.blenderData[0][1][:]
+        self.generalInfo = self.blenderData[3]
+        #print self.generalInfo
+        #self.unitSize = 14.0/30.0
+        self.unitSize = 14.0 / 30.0
+        print ("start tranformation matrix" + str(datetime.datetime.now()))
+        self.transMtx = self.initialTrans() #no need to check this one
+        print ("start marked faces" + str(datetime.datetime.now()))
+        self.markedFaces = self.initialMarked()
+        print ("start unmarked faces" + str(datetime.datetime.now()))
+        self.unmarkedFaces = self.initialUnmarked()
+        self.allFaces = self.markedFaces[:]+self.unmarkedFaces[:]
+        print ("start related faces" + str(datetime.datetime.now()))
+        self.findrelatedFaces()
+        print ("finish related faces"+ str(datetime.datetime.now()))
+        #self.allPoints = self.getAllpoints()
+
+    def initialTrans(self):
+        #identify four key points from the data
+        #find the unique one (A) in xz face
+        for vertXZ in self.vertsXZ:
+            if vertXZ not in self.vertsYZ:
+                self.A=vertXZ[:]
+
+        #find the unique one (D) in yz face
+        for vertYZ in self.vertsYZ:
+            if vertYZ not in self.vertsXZ:
+                self.D=vertYZ[:]
+
+        #find the B and C point
+        #print self.vertsYZ
+        #print self.vertsXZ
+        TempResult=[]
+        for element in self.vertsXZ:
+                if element in self.vertsYZ:
+                    TempResult.append(element)
+        dis1=calDistance(TempResult[0],self.A)
+        dis2=calDistance(TempResult[1],self.A)
+        if dis1 > dis2:
+            self.B=TempResult[1][:]
+            self.C=TempResult[0][:]
+        else:
+            self.C=TempResult[1][:]
+            self.B=TempResult[0][:]
+
+        #print self.A, self.B, self.C, self.D
+
+        #find the real coordinates of these points
+        self.ptC=calScaledList(self.unitSize,[-5.04229,0,-8.4463])
+        self.ptB=calScaledList(self.unitSize,[-5.04229,0,-8.4463+2.04945])
+        self.ptA=calScaledList(self.unitSize,[-5.04229+4.03073,0,-8.4463+2.04945])
+        self.ptD=calScaledList(self.unitSize,[-5.04229,4.98983,-8.4463])
+
+        mtx = solve_affine(self.A, self.B, self.C, self.D, self.ptA, self.ptB, self.ptC, self.ptD)
+        return mtx
+
+    def initialMarked(self):
+        markedFaces=[]
+        #Marked face, self.blenderData[1], is encoded as:
+        #[[(blender_index, label, content, gesture), blender_color, verts, normal]...]
+        for face in self.blenderData[1]:
+            markedFaces.append(blenderFace(face, self.transMtx))
+
+        return markedFaces
+
+    def initialUnmarked(self):
+        unmarkedFaces=[]
+        #Marked face, self.blenderData[1], is encoded as:
+        #[[faceVerts, faceNormal]...]
+        for face in self.blenderData[2]:
+            if len(face[0]) == 3:
+                unmarkedFaces.append(blenderFace(face, self.transMtx))
+        return unmarkedFaces
+
+    def findrelatedFaces(self):
+       faceMap = self.data[1]
+       pointMap = self.data[2]
+       relatedFaces = {}
+       oldIdxToNewIdx = {}
+       for face in faceMap:
+           if face not in relatedFaces:
+               relatedFaces[face] = set()
+           for point in faceMap.get(face):
+               for fIndex in pointMap.get(point):
+                   relatedFaces.get(face).add(fIndex)
+
+       for faceIdx in range(len(self.allFaces)):
+           oldIdxToNewIdx[self.allFaces[faceIdx].blender_index] = faceIdx
+
+       for faceIdx in range(len(self.allFaces)):
+           faceOldIndex = self.allFaces[faceIdx].blender_index
+           tempSet = relatedFaces.get(str(faceOldIndex))
+           for faceR in tempSet:
+              self.allFaces[faceIdx].relatedFaces.append(oldIdxToNewIdx[faceR])
+
 
 class cls_AreaData(bpy.types.PropertyGroup):
     bl_options = {'REGISTER', 'UNDO'}
@@ -518,13 +727,10 @@ class MAGIC_onlineimport(bpy.types.Operator):
         
         
         file = req.json()
-    
-
         
         ## Copy pasted import method
-        data = json.loads(bytes(file["Body"]["data"]).decode())
-        
-     
+        data = file
+        print(data['vertices'])
         ## Add each vertex to a list - Done
         Vertices = []
         i=0
@@ -811,11 +1017,7 @@ class MAGIC_export(bpy.types.Operator):
 
     def execute(self, context):
         fileName = context.scene.export_path + context.scene.inputName_model
-        ##print(context.scene.export_path)
-        # print(bpy.ops.magic.hotarea().hotareaInfoStorage)
-        ##Temp = []
-        ##mesh = obj.data
-        ##mesh_editmode = bmesh.from_edit_mesh(mesh)
+        
         
         data = {}
         obj = bpy.context.active_object  # particular object by name
@@ -918,8 +1120,104 @@ class MAGIC_export(bpy.types.Operator):
         data['xz'] = xz
         data['yz'] = yz
         
-        with open(fileName + '.json' , 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
+        thread = threading.Thread(target= writefile(fileName,data))
+        thread.start()
+
+        # wait here for the result to be available before continuing
+        thread.join()
+        with open(fileName + '.json') as json_file:
+            dataprocess = json.load(json_file, object_pairs_hook=OrderedDict)
+
+        blenderData = []
+        xyz = []
+        marked = []
+        unmarked = []
+        vertices = []
+        areas = []
+        generalinfo = []
+        faceMap = {}
+        pointMap = {}
+        
+        generalinfo.append("hello")
+        generalinfo.append("test")
+        
+        xyz.append(data["xz"])
+        xyz.append(data["yz"])
+        
+        blenderData.append(xyz)
+        
+        
+        areas = [data['areas']]
+        
+        vertices = [data['vertices']]
+        
+        faces = data['faces']
+        
+        for f in faces:
+            if faces[f]['area_index'] == 0:
+                currentface = []
+                currentvertices = []
+                currentverticesindexes = []
+                currentnormal = []
+        
+                for v in faces[f]['vertices']:
+                    currentvertices.append(vertices[0][str(v)])
+                    currentverticesindexes.append(str(v))
+                for v in faces[f]['normal']:
+                    currentnormal.append(v)
+        
+                faceMap[f] = currentverticesindexes
+                currentface.append(currentvertices)
+                currentface.append(currentnormal)
+                currentface.append(f)
+                unmarked.append(currentface)
+            else:
+                currentface = []
+                generalinfo = []
+                color = []
+                currentvertices = []
+                currentverticesindexes = []
+                currentnormal = []
+                areaindex = faces[f]['area_index'] - 1
+                for v in faces[f]['vertices']:
+                    currentverticesindexes.append(str(v))
+                generalinfo.append(f)
+        
+                generalinfo.append(areas[0][str(areaindex)]['area_label'])
+                generalinfo.append(areas[0][str(areaindex)]['area_content'])
+                generalinfo.append(areas[0][str(areaindex)]['area_gesture'])
+        
+                color.append(areas[0][str(areaindex)]['area_color'])
+        
+                for v in faces[f]['vertices']:
+                    currentvertices.append(vertices[0][str(v)])
+                for v in faces[f]['normal']:
+                    currentnormal.append(v)
+                faceMap[f] = currentverticesindexes
+                currentface.append(generalinfo)
+        
+        
+                currentface.append(color[0])
+                currentface.append(currentvertices)
+                currentface.append(currentnormal)
+                marked.append(currentface)
+        
+        blenderData.append(marked)
+        blenderData.append(unmarked)
+        blenderData.append(generalinfo)
+        
+        for faceIndex in iter(faceMap):
+            for pointIndex in faceMap.get(faceIndex):
+                if pointIndex not in pointMap:
+                    pointMap[pointIndex] = set()
+                pointMap.get(pointIndex).add(faceIndex)
+        
+        
+        
+        newdata = [blenderData, faceMap, pointMap]
+        
+        INPUTFILEADDRESS = fileName
+
    
 
         return {'FINISHED'}
