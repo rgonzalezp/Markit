@@ -32,9 +32,13 @@ bl_info = \
         "category" : "Development",
 }
 
-def writefile(fileName,data):
-    with open(fileName + '.json' , 'w', encoding='utf-8') as f:
+def writeFile(fileName,data):
+    with open(fileName + ".json", 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+            
+def writeFilePickle(fileName,newdata):
+    pickle.dump(newdata, open(fileName, "wb"),
+            protocol=2)
     
 
 #get transformation matrix from the Blender coordinates to the Tracker coordinates
@@ -235,7 +239,6 @@ class blenderReader:
            tempSet = relatedFaces.get(str(faceOldIndex))
            for faceR in tempSet:
               self.allFaces[faceIdx].relatedFaces.append(oldIdxToNewIdx[faceR])
-
 
 class cls_AreaData(bpy.types.PropertyGroup):
     bl_options = {'REGISTER', 'UNDO'}
@@ -1119,13 +1122,15 @@ class MAGIC_export(bpy.types.Operator):
         data['areas'] = Areas
         data['xz'] = xz
         data['yz'] = yz
+        data['modelname'] = context.scene.inputName_model
+        data['modeldescription'] = context.scene.inputIntroduction_model
         
-        thread = threading.Thread(target= writefile(fileName,data))
+        thread = threading.Thread(target= writeFile(fileName,data))
         thread.start()
 
         # wait here for the result to be available before continuing
         thread.join()
-        with open(fileName + '.json') as json_file:
+        with open(fileName + ".json") as json_file:
             dataprocess = json.load(json_file, object_pairs_hook=OrderedDict)
 
         blenderData = []
@@ -1147,11 +1152,11 @@ class MAGIC_export(bpy.types.Operator):
         blenderData.append(xyz)
         
         
-        areas = [data['areas']]
+        areas = [dataprocess['areas']]
         
-        vertices = [data['vertices']]
+        vertices = [dataprocess['vertices']]
         
-        faces = data['faces']
+        faces = dataprocess['faces']
         
         for f in faces:
             if faces[f]['area_index'] == 0:
@@ -1215,10 +1220,91 @@ class MAGIC_export(bpy.types.Operator):
         
         
         newdata = [blenderData, faceMap, pointMap]
-        
-        INPUTFILEADDRESS = fileName
+            
+        thread = threading.Thread(target= writeFilePickle(fileName,newdata))
+        thread.start()
 
-   
+        # wait here for the result to be available before continuing
+        thread.join()
+
+        INPUTFILEADDRESS = fileName
+        OUTPUTFILEADDRESS = fileName + "processed.json"
+        
+        modelData = blenderReader(INPUTFILEADDRESS)
+        
+        FaceDict={}
+        index = 0
+        tempcount = 0
+        
+        for eachFaceIndex in range(len(modelData.allFaces)):
+            eachFace = modelData.allFaces[eachFaceIndex]
+            templist = {}
+            templist['marked'] = eachFace.marked
+            if eachFace.marked:
+                templist['index'] = eachFaceIndex
+        
+                templist['color'] = {"r":eachFace.blender_color[0],
+                                  "g":eachFace.blender_color[1],
+                                  "b": eachFace.blender_color[2]}
+        
+                tempcount = tempcount +1
+            else:
+                templist['index'] = eachFaceIndex
+        
+                templist['color'] = "null"
+        
+            if eachFace.label == "Body":
+                eachFace.label = "m_body"
+        
+            if eachFace.label == "Jet engine":
+                eachFace.label = "m_jet"
+        
+            if eachFace.label == "Cockpit":
+                eachFace.label = "m_cockpit"
+        
+            if eachFace.label == "unmarked":
+                eachFace.label = "nolabel"
+                eachFace.content = "please activate an element with label"
+        
+            templist['label'] = eachFace.label
+            templist['content'] = eachFace.content
+            templist['normal'] = {"x":eachFace.normalConverted[0],
+                                  "y":eachFace.normalConverted[1],
+                                  "z": eachFace.normalConverted[2]}
+            templist['verts'] = dict(vert1={'x': eachFace.vertsConverted[0][0],
+                                            'y': eachFace.vertsConverted[0][1],
+                                            'z': eachFace.vertsConverted[0][2]
+                                            },
+                                     vert2={'x': eachFace.vertsConverted[1][0],
+                                            'y': eachFace.vertsConverted[1][1],
+                                            'z': eachFace.vertsConverted[1][2]
+                                                      },
+                                     vert3={'x': eachFace.vertsConverted[2][0],
+                                            'y': eachFace.vertsConverted[2][1],
+                                            'z': eachFace.vertsConverted[2][2]
+                                                                })
+        
+        
+            tempIndexes = {}
+            count = 0
+            for eachNearFace in eachFace.relatedFaces:
+                tempIndexes[str(count)] = eachNearFace
+                count = count + 1
+        
+            templist['nearFaces'] = tempIndexes
+            FaceDict['face'+str(index)]= templist
+            index = index +1
+        
+        ExportData = {
+            'modelName': modelData.generalInfo[0],
+            'modelIntro' : modelData.generalInfo[1],
+            'faces' : FaceDict
+        }
+        
+        print(tempcount)
+        
+        with open(OUTPUTFILEADDRESS, 'w') as outfile:
+            json.dump(ExportData, outfile)
 
         return {'FINISHED'}
     
@@ -1367,7 +1453,7 @@ def register():
 
     bpy.types.Scene.inputIntroduction_model = bpy.props.StringProperty \
             (
-            name="Model Introduction",
+            name="Model Description",
             description="Introduction for the model",
             default="Enter Introduction"
         )
