@@ -7,6 +7,9 @@ node {
     
     sh 'echo "Uploading files to drive"'
 
+     git url: 'https://github.com/rgonzalezp/Markit', 
+    credentialsId: '7cd0af8d-6394-44ac-b147-b8bd956ed2f1'
+
     }
 
     stage ('Code analysis') {
@@ -18,3 +21,4 @@ node {
     
     
 }
+
