@@ -10,7 +10,9 @@ from collections import OrderedDict
 from scipy.spatial import distance
 import threading
 import time
+import gzip, zlib
 import numpy as np
+from io import BytesIO
 
 ###############################################################################################
 ####    We define the addon information in this structure:            #########################
@@ -31,6 +33,18 @@ bl_info = \
         "tracker_url" : "",
         "category" : "Development",
 }
+
+def download_file(url):
+    local_filename = url.split('/')[-1]
+    # NOTE the stream=True parameter below
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192): 
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+                    # f.flush()
+    return local_filename
 
 def writeFile(fileName,data):
     with open(fileName + ".json", 'w', encoding='utf-8') as f:
@@ -726,14 +740,28 @@ class MAGIC_onlineimport(bpy.types.Operator):
         modelid = context.scene.model_id
         
         ## we make the request with the id
-        req = requests.get('http://13.59.169.104:8000/api/files/' + modelid + '.json')
+        req = requests.get('http://13.59.186.38:8000/api/models/' + modelid + '.gz')
         
         
-        file = req.json()
+        str_decoded = req.content.decode()
+
+        jsonform = json.loads(str_decoded)
+
+        firstdata = jsonform['Body']['data']
+        
+        ba = bytearray(firstdata)
+        
+        newData = zlib.decompress(bytes(ba), 15+32)
+
+        
+        newDat = json.loads(newData)
+
+        
         
         ## Copy pasted import method
-        data = file
-        print(data['vertices'])
+        data = json.loads(newDat)
+
+        print(data)
         ## Add each vertex to a list - Done
         Vertices = []
         i=0
@@ -753,7 +781,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
             i+=1
         
         ## Use file name to add the new mesh
-        NewMesh = bpy.data.meshes.new("whatever")
+        NewMesh = bpy.data.meshes.new("modelmesh")
         
         ### We define how the mesh will be built
         
