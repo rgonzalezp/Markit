@@ -1372,7 +1372,7 @@ class MAGIC_import(bpy.types.Operator):
             i+=1
         
         ## Use file name to add the new mesh
-        NewMesh = bpy.data.meshes.new("whatever")
+        NewMesh = bpy.data.meshes.new("newModel")
         
         ### We define how the mesh will be built
         
@@ -1387,7 +1387,7 @@ class MAGIC_import(bpy.types.Operator):
         
         context = bpy.context
         ## Use file name again to link it
-        NewObj = bpy.data.objects.new("whatever", NewMesh)
+        NewObj = bpy.data.objects.new("newModel", NewMesh)
         
         ### linking the new object to the scene
         context.scene.objects.link(NewObj)
