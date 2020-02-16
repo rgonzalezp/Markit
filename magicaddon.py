@@ -376,9 +376,9 @@ def mergeObjects(self,context):
     i=0
     for i in range(3):
         ob.area_list.add()
-        ob.area_list[-1].area_index = 0
-        ob.area_list[-1].area_label = "nothing"
-        ob.area_list[-1].area_content = "nothing"
+        ob.area_list[-1].area_index = ob.area_list.length -1
+        ob.area_list[-1].area_label = "Scaffold"
+        ob.area_list[-1].area_content = "This is the scaffold of the model"
         ob.area_list[-1].area_gesture = "nothing"
         ob.area_list[-1].area_color = [0,0,0,0]
         i+=1
@@ -884,15 +884,16 @@ class MAGIC_hotarea(bpy.types.Operator):
 
     def execute(self, context):
         selection = bpy.context.selected_objects
+        
         if len(selection) > 1:
             bpy.ops.error.message('INVOKE_DEFAULT',
                                   type="Error",
-                                  message='You select more than one object')
+                                  message='You selected more than one object, only select the object you want to label')
             return {'FINISHED'}
         if len(selection) == 0:
             bpy.ops.error.message('INVOKE_DEFAULT',
                                   type="Error",
-                                  message='Please select one object')
+                                  message='You have to select the object you want to edit, before labelling the faces.')
             return {'FINISHED'}
 
         if self.operation == "add":
@@ -1084,10 +1085,9 @@ class MAGIC_export(bpy.types.Operator):
 
         j=0
         for face in mesh.polygons:
-            if obj.material_slots[face.material_index].name.startswith('mainBody') or obj.material_slots[face.material_index].name.startswith('yzFace') or obj.material_slots[face.material_index].name.startswith('xzFace')  :
+            if obj.material_slots[face.material_index].name.startswith('mainBody'):
                 Faces[j].update({'area_index':0})
             else :   
-                print(face.material_index)
                 Faces[j].update({'area_index':face.material_index})
             j+=1
         ## Areas information, dictionary with the 
@@ -1167,12 +1167,12 @@ class MAGIC_export(bpy.types.Operator):
         unmarked = []
         vertices = []
         areas = []
-        generalinfo = []
+        modelInfo = []
         faceMap = {}
         pointMap = {}
         
-        generalinfo.append("hello")
-        generalinfo.append("test")
+        modelInfo.append(context.scene.inputName_model)
+        modelInfo.append(context.scene.inputIntroduction_model)
         
         xyz.append(data["xz"])
         xyz.append(data["yz"])
@@ -1237,7 +1237,9 @@ class MAGIC_export(bpy.types.Operator):
         
         blenderData.append(marked)
         blenderData.append(unmarked)
-        blenderData.append(generalinfo)
+        blenderData.append(modelInfo)
+        
+        
         
         for faceIndex in iter(faceMap):
             for pointIndex in faceMap.get(faceIndex):
@@ -1328,8 +1330,6 @@ class MAGIC_export(bpy.types.Operator):
             'modelIntro' : modelData.generalInfo[1],
             'faces' : FaceDict
         }
-        
-        print(tempcount)
         
         with open(OUTPUTFILEADDRESS, 'w') as outfile:
             json.dump(ExportData, outfile)
@@ -1453,7 +1453,7 @@ class MAGIC_import(bpy.types.Operator):
         bpy.ops.mesh.normals_make_consistent(inside=False)
         
             
-            
+        bpy.ops.mesh.sel
         bpy.ops.object.editmode_toggle()   
 
         return {'FINISHED'}
