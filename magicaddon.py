@@ -376,7 +376,7 @@ def mergeObjects(self,context):
     i=0
     for i in range(3):
         ob.area_list.add()
-        ob.area_list[-1].area_index = ob.area_list.length -1
+        ob.area_list[-1].area_index = len(ob.area_list) -1
         ob.area_list[-1].area_label = "Scaffold"
         ob.area_list[-1].area_content = "This is the scaffold of the model"
         ob.area_list[-1].area_gesture = "nothing"
@@ -761,7 +761,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         ## Copy pasted import method
         data = json.loads(newDat)
 
-        print(data)
+        
         ## Add each vertex to a list - Done
         Vertices = []
         i=0
@@ -820,6 +820,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         ##material = makeMaterial(name=p.name, diffuse=p.color, alpha=p.diffuse)
         ##mesh.materials.append(material)
         i=0
+        print(data['materials'])
         for p in data['materials']:
             ## Change all of this to makeMaterial when doing in main component
             currentData = data['materials'][str(i)]
