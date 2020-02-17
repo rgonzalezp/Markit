@@ -820,7 +820,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         ##material = makeMaterial(name=p.name, diffuse=p.color, alpha=p.diffuse)
         ##mesh.materials.append(material)
         i=0
-        print(data['materials'])
+        
         for p in data['materials']:
             ## Change all of this to makeMaterial when doing in main component
             currentData = data['materials'][str(i)]
