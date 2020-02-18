@@ -153,11 +153,13 @@ class blenderReader:
         file = open(fileAddress, "rb")
         #blenderData is encoded as [(xy,yz),(marked face),(unmarked face), (name, introduction)]
         self.data = pickle.load(file)
-
         self.blenderData = self.data[0]
         file.close()
         print ("finish loading" + str(datetime.datetime.now()))
         #variables for finding the transformation matrix
+        
+        
+        print(self.blenderData[1])
         self.vertsXZ = self.blenderData[0][0][:]
         self.vertsYZ = self.blenderData[0][1][:]
         self.generalInfo = self.blenderData[3]
@@ -189,8 +191,8 @@ class blenderReader:
                 self.D=vertYZ[:]
 
         #find the B and C point
-        #print self.vertsYZ
-        #print self.vertsXZ
+        print(self.vertsYZ)
+        print(self.vertsXZ)
         TempResult=[]
         for element in self.vertsXZ:
                 if element in self.vertsYZ:
@@ -377,9 +379,9 @@ def mergeObjects(self,context):
     for i in range(3):
         ob.area_list.add()
         ob.area_list[-1].area_index = 0
-        ob.area_list[-1].area_label = "nothing"
-        ob.area_list[-1].area_content = "nothing"
-        ob.area_list[-1].area_gesture = "nothing"
+        ob.area_list[-1].area_label = ""
+        ob.area_list[-1].area_content = ""
+        ob.area_list[-1].area_gesture = ""
         ob.area_list[-1].area_color = [0,0,0,0]
         i+=1
     
@@ -622,6 +624,7 @@ class ToolsPanel(bpy.types.Panel):
         box.prop(context.scene, "inputLabel_hotarea")
         box.prop(context.scene, "inputContent_hotarea")
         box.prop(context.scene, "inputGesture_hotarea")
+        
         sub = box.row(True)
         sub.prop(context.scene, "inputColor_hotarea")
         
@@ -761,7 +764,6 @@ class MAGIC_onlineimport(bpy.types.Operator):
         ## Copy pasted import method
         data = json.loads(newDat)
 
-        print(data)
         ## Add each vertex to a list - Done
         Vertices = []
         i=0
@@ -941,14 +943,14 @@ class MAGIC_hotarea(bpy.types.Operator):
                 
         for f in me.polygons:
             if f.material_index in delmaterials:
-                print("changing face", f.index)
+                
                 f.material_index = 0
         
         delareas.reverse()
     
         q = 0       
         for j in delareas:
-            print(delareas[q])
+            
             ob.area_list[delareas[q]].area_index = 0
             q = q + 1
         
@@ -1023,7 +1025,7 @@ class MAGIC_hotarea(bpy.types.Operator):
                     ### we add it to the area
                 obj.area_list.add()
                 current_areas.append(newMaterialIndex)
-                print("add new area", newMaterialIndex)
+                
                 f.material_index = newMaterialIndex
                 obj.area_list[-1].area_index = newMaterialIndex
                 obj.area_list[-1].area_label = label
@@ -1032,7 +1034,7 @@ class MAGIC_hotarea(bpy.types.Operator):
                 obj.area_list[-1].area_color = color
             ### Add a new area and the face to the area list of the model
                     
-        print(obj.area_list)
+        
         
 
 
@@ -1053,6 +1055,8 @@ class MAGIC_export(bpy.types.Operator):
         data = {}
         obj = bpy.context.active_object  # particular object by name
         mesh = obj.data
+        
+        print(obj)
 
         ## Obtaining vertices data
         i = 0
@@ -1084,10 +1088,9 @@ class MAGIC_export(bpy.types.Operator):
 
         j=0
         for face in mesh.polygons:
-            if obj.material_slots[face.material_index].name.startswith('mainBody') or obj.material_slots[face.material_index].name.startswith('yzFace') or obj.material_slots[face.material_index].name.startswith('xzFace')  :
+            if obj.material_slots[face.material_index].name.startswith('mainBody') :
                 Faces[j].update({'area_index':0})
             else :   
-                print(face.material_index)
                 Faces[j].update({'area_index':face.material_index})
             j+=1
         ## Areas information, dictionary with the 
@@ -1248,16 +1251,17 @@ class MAGIC_export(bpy.types.Operator):
         
         
         newdata = [blenderData, faceMap, pointMap]
-            
+        
         thread = threading.Thread(target= writeFilePickle(fileName,newdata))
         thread.start()
+        
 
         # wait here for the result to be available before continuing
         thread.join()
-
+        
         INPUTFILEADDRESS = fileName
         OUTPUTFILEADDRESS = fileName + "processed.json"
-        
+        print(INPUTFILEADDRESS)
         modelData = blenderReader(INPUTFILEADDRESS)
         
         FaceDict={}
@@ -1329,7 +1333,7 @@ class MAGIC_export(bpy.types.Operator):
             'faces' : FaceDict
         }
         
-        print(tempcount)
+        
         
         with open(OUTPUTFILEADDRESS, 'w') as outfile:
             json.dump(ExportData, outfile)
