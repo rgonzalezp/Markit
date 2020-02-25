@@ -743,7 +743,7 @@ class MAGIC_onlineimport(bpy.types.Operator):
         modelid = context.scene.model_id
         
         ## we make the request with the id
-        req = requests.get('http://13.59.186.38:8000/api/models/' + modelid + '.gz')
+        req = requests.get('http://13.59.186.38:8000/api/models/' + modelid)
         
         
         str_decoded = req.content.decode()
