@@ -1163,7 +1163,7 @@ class MAGIC_export(bpy.types.Operator):
 
         # wait here for the result to be available before continuing
         thread.join()
-        with open(fileName + ".json") as json_file:
+        with open(fileName + ".json", encoding='utf8') as json_file:
             dataprocess = json.load(json_file, object_pairs_hook=OrderedDict)
 
         blenderData = []
