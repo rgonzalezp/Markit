@@ -101,8 +101,10 @@ class blenderFace:
         #with the len == 4
         if len(rawFace)==4:
             #makred face
+            
             self.marked=True
             self.blender_index = rawFace[0][0]
+            self.area_id = rawFace[0][4]
             self.label = rawFace[0][1]
             self.content = rawFace[0][2]
             self.gesture = rawFace[0][3]
@@ -112,6 +114,7 @@ class blenderFace:
             self.vertsConverted = []
             self.vertsConverted_2d = []
             self.relatedFaces = []
+            
             for eachPt in self.verts:
                 self.vertsConverted.append(solve_point(eachPt, mtx))
             self.normalConverted= solve_normal(self.normal, mtx)
@@ -159,7 +162,7 @@ class blenderReader:
         #variables for finding the transformation matrix
         
         
-        print(self.blenderData[1])
+        
         self.vertsXZ = self.blenderData[0][0][:]
         self.vertsYZ = self.blenderData[0][1][:]
         self.generalInfo = self.blenderData[3]
@@ -191,8 +194,7 @@ class blenderReader:
                 self.D=vertYZ[:]
 
         #find the B and C point
-        print(self.vertsYZ)
-        print(self.vertsXZ)
+        
         TempResult=[]
         for element in self.vertsXZ:
                 if element in self.vertsYZ:
@@ -222,6 +224,7 @@ class blenderReader:
         #Marked face, self.blenderData[1], is encoded as:
         #[[(blender_index, label, content, gesture), blender_color, verts, normal]...]
         for face in self.blenderData[1]:
+            print(face)
             markedFaces.append(blenderFace(face, self.transMtx))
 
         return markedFaces
@@ -385,7 +388,7 @@ def mergeObjects(self,context):
         ob.area_list[-1].area_color = [0,0,0,0]
         i+=1
     
-    print(ob.area_list)
+    
     
     return {"FINISHED"}
     
@@ -1058,7 +1061,7 @@ class MAGIC_export(bpy.types.Operator):
         obj = bpy.context.active_object  # particular object by name
         mesh = obj.data
         
-        print(obj)
+        
 
         ## Obtaining vertices data
         i = 0
@@ -1224,6 +1227,7 @@ class MAGIC_export(bpy.types.Operator):
                 generalinfo.append(areas[0][str(areaindex)]['area_label'])
                 generalinfo.append(areas[0][str(areaindex)]['area_content'])
                 generalinfo.append(areas[0][str(areaindex)]['area_gesture'])
+                generalinfo.append(str(areaindex))
         
                 color.append(areas[0][str(areaindex)]['area_color'])
         
@@ -1238,6 +1242,7 @@ class MAGIC_export(bpy.types.Operator):
                 currentface.append(color[0])
                 currentface.append(currentvertices)
                 currentface.append(currentnormal)
+                
                 marked.append(currentface)
         
         blenderData.append(marked)
@@ -1265,7 +1270,7 @@ class MAGIC_export(bpy.types.Operator):
         
         INPUTFILEADDRESS = fileName
         OUTPUTFILEADDRESS = fileName + "processed.json"
-        print(INPUTFILEADDRESS)
+        
         modelData = blenderReader(INPUTFILEADDRESS)
         
         FaceDict={}
@@ -1276,9 +1281,11 @@ class MAGIC_export(bpy.types.Operator):
             eachFace = modelData.allFaces[eachFaceIndex]
             templist = {}
             templist['marked'] = eachFace.marked
+            if(eachFace.marked == True):
+                templist['area_id'] = eachFace.area_id
             if eachFace.marked:
                 templist['index'] = eachFaceIndex
-        
+                print(eachFace)
                 templist['color'] = {"r":eachFace.blender_color[0],
                                   "g":eachFace.blender_color[1],
                                   "b": eachFace.blender_color[2]}
