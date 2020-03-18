@@ -224,7 +224,7 @@ class blenderReader:
         #Marked face, self.blenderData[1], is encoded as:
         #[[(blender_index, label, content, gesture), blender_color, verts, normal]...]
         for face in self.blenderData[1]:
-            print(face)
+            
             markedFaces.append(blenderFace(face, self.transMtx))
 
         return markedFaces
@@ -1285,7 +1285,7 @@ class MAGIC_export(bpy.types.Operator):
                 templist['area_id'] = eachFace.area_id
             if eachFace.marked:
                 templist['index'] = eachFaceIndex
-                print(eachFace)
+                
                 templist['color'] = {"r":eachFace.blender_color[0],
                                   "g":eachFace.blender_color[1],
                                   "b": eachFace.blender_color[2]}
